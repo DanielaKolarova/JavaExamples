@@ -12,6 +12,8 @@ import org.junit.Test;
 public class FileWordIteratorTest {
 
 	private static final String EMPTY_TEXT_FILE = "Empty.txt";
+	
+	private static final String MISSING_TEXT_FILE = "SomeFile8789.txt";
 
 	private static final String SIMPLE_TEXT_FILE = "HitchHiker.txt";
 
@@ -22,6 +24,24 @@ public class FileWordIteratorTest {
 	private static final int SIMPLE_TEXT_FILE_WORDS_COUNT = 160;
 
 	private static final int LARGE_TEXT_FILE_WORDS_COUNT = 47086;
+
+	@Test(expected = NullPointerException.class)
+	public void testIteratorConstructionWithNullAsInputFileName() {
+		try (FileWordIterator fileWordIterator = new FileWordIterator(null)) {
+
+		} catch (IOException ioEx) {
+			Assert.assertTrue(ioEx.getMessage(), false);
+		}
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIteratorConstructionWithNonExistingFile() {
+		try (FileWordIterator fileWordIterator = new FileWordIterator(MISSING_TEXT_FILE)) {
+
+		} catch (IOException ioEx) {
+			Assert.assertTrue(ioEx.getMessage(), false);
+		}
+	}
 
 	@Test
 	public void testIterateSimpleData() {
@@ -54,11 +74,11 @@ public class FileWordIteratorTest {
 			Assert.assertTrue(ioEx.getMessage(), false);
 		}
 
-		List<String> expectedWordsList = loadFileRowsIntoList();
+		List<String> expectedWordsList = loadRowsIntoList();
 
 		Assert.assertTrue(expectedWordsList.equals(words));
 	}
-	
+
 	@Test(expected = NoSuchElementException.class)
 	public void testIterateSimpleDataAfterEndReached() {
 		try (FileWordIterator fileWordIterator = new FileWordIterator(
@@ -67,7 +87,7 @@ public class FileWordIteratorTest {
 			while (fileWordIterator.hasNext()) {
 				fileWordIterator.next();
 			}
-			
+
 			fileWordIterator.next();
 		} catch (IOException ioEx) {
 			Assert.assertTrue(ioEx.getMessage(), false);
@@ -85,7 +105,7 @@ public class FileWordIteratorTest {
 			Assert.assertTrue(ioEx.getMessage(), false);
 		}
 	}
-	
+
 	@Test(expected = IllegalStateException.class)
 	public void testIterateSimpleDataAfterIteratorClosed() {
 		try (FileWordIterator fileWordIterator = new FileWordIterator(
@@ -117,23 +137,6 @@ public class FileWordIteratorTest {
 		Assert.assertEquals(LARGE_TEXT_FILE_WORDS_COUNT, count);
 	}
 
-	@Test(expected = NullPointerException.class)
-	public void testIterateOnNonExistingFile() {
-		int count = 0;
-		try (FileWordIterator fileWordIterator = new FileWordIterator(
-				FileWordIteratorTest.class.getResource("someFile8789.txt").getFile())) {
-
-			while (fileWordIterator.hasNext()) {
-				fileWordIterator.next();
-				count++;
-			}
-		} catch (IOException ioEx) {
-			Assert.assertTrue(ioEx.getMessage(), false);
-		}
-
-		Assert.assertEquals(SIMPLE_TEXT_FILE_WORDS_COUNT, count);
-	}
-	
 	@Test
 	public void testHasNextOnEmptyFile() {
 		try (FileWordIterator fileWordIterator = new FileWordIterator(
@@ -144,7 +147,7 @@ public class FileWordIteratorTest {
 			Assert.assertTrue(ioEx.getMessage(), false);
 		}
 	}
-	
+
 	@Test(expected = NoSuchElementException.class)
 	public void testIterateOnEmptyFile() {
 		try (FileWordIterator fileWordIterator = new FileWordIterator(
@@ -156,8 +159,7 @@ public class FileWordIteratorTest {
 		}
 	}
 
-
-	private List<String> loadFileRowsIntoList() {
+	private List<String> loadRowsIntoList() {
 		List<String> words = new ArrayList<>();
 		words.addAll(Arrays.asList("HitchHiker's", "Guide", "to", "the", "Galaxy", "Intro", "Far", "out", "in", "the",
 				"uncharted", "backwaters", "of", "the", "unfashionable", "end", "of", "the", "western", "spiral", "arm",

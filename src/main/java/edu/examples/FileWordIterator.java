@@ -17,7 +17,9 @@ import java.util.Objects;
  * constructor of the <code>FileWordIterator</code> will cause a
  * <code>NullPointerException</code> to be thrown.
  * 
- * Example<br/>
+ * <p>
+ * <b>Example</b>
+ * <p>
  * The text:<br/>
  * <b>HitchHiker's[Space][Space]Guide[Tab][Space]to[Space]the[Space]Galaxy[Space]Intro[NewLine]</b>
  * will be broken into words using the iterator the following way:<br/>
@@ -47,25 +49,20 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 	private static final String WHITE_SPACE_PATTERN = "\\s+";
 
 	/**
-	 * Wrapper class used for input source buffering. In general, each read
-	 * request made of a Reader causes a corresponding read request to be made
-	 * of the underlying character or byte stream. It is therefore advisable to
-	 * wrap a BufferedReader around any Reader whose read() operations may be
-	 * costly, such as FileReaders and InputStreamReaders. This is an
-	 * implementation detail of the class that might change in the future.
+	 * Wrapper class used for input source construction and buffering.
 	 */
 	private BufferedReader sourceReader;
 
 	/**
-	 * Buffer containing words/tokens that has been read form the underlying
-	 * source. Words are cached after each read operations.
+	 * Buffer containing words/tokens that has been read form the underlying source.
+	 * Words are cached after each read operations.
 	 */
 	private String[] tokensBuffer;
 
 	/**
 	 * Pointer for the current position in the tokens buffer
 	 */
-	private int currentPosition;
+	private int currentPosition = -1;
 
 	/**
 	 * Boolean flag that holds information about the status of the iterator
@@ -74,9 +71,9 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 	private boolean closed = false;
 
 	/**
-	 * Constructs a <code>FileWordIterator</code> that returns values scanned
-	 * from the specified source delimited by whitespace or a sequence of
-	 * whitespace characters.
+	 * Constructs a <code>FileWordIterator</code> that returns values scanned from
+	 * the specified source delimited by whitespace or a sequence of whitespace
+	 * characters.
 	 *
 	 * @param sourceFileName
 	 *            Name of the source file being iterated.
@@ -87,8 +84,8 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 	 *            {@link NullPointerException}.
 	 * 
 	 *            <br/>
-	 *            Attempting to pass a name of an non existing file will result
-	 *            in a {@link IllegalStateException}.
+	 *            Attempting to pass a name of an non existing file will result in a
+	 *            {@link IllegalArgumentException}.
 	 */
 	public FileWordIterator(String sourceFileName) {
 		Objects.requireNonNull(sourceFileName, "Source file name");
@@ -97,23 +94,22 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 		try {
 			fileReader = new FileReader(sourceFileName);
 		} catch (FileNotFoundException e) {
-			throw new IllegalStateException("Source file is invalid: " + e.getMessage(), e);
+			throw new IllegalArgumentException("Source file is invalid: " + e.getMessage(), e);
 		}
 
 		this.sourceReader = new BufferedReader(fileReader);
 	}
 
 	/**
-	 * Returns {@code true} if the the file contains more elements/words. (In
-	 * other words, returns {@code true} if {@link #next} would return an
-	 * element rather than throwing an exception.)
+	 * Returns {@code true} if the file contains more elements/words. (In other
+	 * words, returns {@code true} if {@link #next} would return an element rather
+	 * than throwing an exception.)
 	 * 
 	 * <br/>
 	 * Attempting to call method <code>hasNext</code> on a closed iterator will
 	 * result in a {@link IllegalStateException}.
 	 * 
 	 * @return {@code true} if the iteration has more elements/words
-	 * 
 	 */
 	@Override
 	public boolean hasNext() {
@@ -129,8 +125,9 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 	 * Returns the next word in the iteration.
 	 * 
 	 * <br/>
-	 * Attempting to call method <code>hasNext</code> on a closed iterator will
-	 * result in a {@link IllegalStateException}.
+	 * Inability to read from the underlying source due to internal errors or an
+	 * attempt to call method <code>hasNext</code> on a closed iterator will result
+	 * in an {@link IllegalStateException}.
 	 * 
 	 * @return the next word in the iteration
 	 * 
@@ -157,10 +154,11 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 	 * effect.
 	 *
 	 * <br/>
-	 * Attempting to perform search operations after the iterator has been
-	 * closed will result in an {@link IllegalStateException}.
+	 * Attempting to perform search operations after the iterator has been closed
+	 * will result in an {@link IllegalStateException}.
 	 * 
-	 * @throws IOException ???
+	 * @throws IOException
+	 *             if an I/O error occurs
 	 *
 	 */
 	public void close() throws IOException {
@@ -182,13 +180,19 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 			throw new IllegalStateException("File based word iterator closed");
 	}
 
+	/**
+	 * Buffers the next list of words if any.
+	 * 
+	 * <br/>
+	 * Inability to read from the underlying source due to internal errors will
+	 * result in an {@link IllegalStateException}.
+	 */
 	private void buffer() {
 		String line = null;
 		try {
 			line = readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new IllegalStateException("Iteration failed due to an error: " + e.getMessage(), e);
 		}
 
 		if (line != null) {
@@ -200,6 +204,15 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 		}
 	}
 
+	/**
+	 * Reads the next line from the underlying data source.
+	 * 
+	 * @return Next line from the underlying data source or <code>null</code> if the
+	 *         end of the underlying data source has been reached.
+	 * 
+	 * @throws IOException
+	 *             if an I/O error occurs
+	 */
 	private String readLine() throws IOException {
 		String line;
 
@@ -210,8 +223,16 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 		return line;
 	}
 
+	/**
+	 * Returns {@code true} if the internal words buffer contains more
+	 * elements/words.
+	 * 
+	 * @return {@code true} if the internal words buffer contains more
+	 *         elements/words
+	 * 
+	 */
 	private boolean hasWordInBuffer() {
-		return tokensBuffer != null && (currentPosition < tokensBuffer.length);
+		return tokensBuffer != null && currentPosition > -1 && (currentPosition < tokensBuffer.length);
 	}
 
 }
