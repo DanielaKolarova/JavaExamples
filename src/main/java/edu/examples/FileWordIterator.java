@@ -232,7 +232,7 @@ public final class FileWordIterator implements Iterator<String>, Closeable {
 	 * 
 	 */
 	private boolean hasWordInBuffer() {
-		return tokensBuffer != null && currentPosition > -1 && (currentPosition < tokensBuffer.length);
+		return tokensBuffer != null && currentPosition > -1 && currentPosition < tokensBuffer.length;
 	}
 
 }
